@@ -34,7 +34,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
         // Check if the endpoint is secured
         if (routerValidator.isSecured.test(request)) {
-            // 1. Check for Authorization header
+            //Check for Authorization header
             if (this.isAuthMissing(request)) {
                 log.warn("Authorization header is missing for secured endpoint: {}", request.getURI());
                 return this.onError(exchange, "Authorization header is missing", HttpStatus.UNAUTHORIZED);
@@ -42,7 +42,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
             final String token = this.getAuthHeader(request);
 
-            // 2. Validate the JWT
+            //Validate the JWT
             try {
                 jwtUtil.validateToken(token);
             } catch (Exception e) {
@@ -52,14 +52,14 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
             Claims claims = jwtUtil.getClaims(token);
 
-            // 3. Check for required role
+            //Check for required role
             if (!hasRequiredRole(request, (List<String>) claims.get("authorities"))) {
                 log.warn("User does not have required role to access {}. Roles: {}", request.getURI().getPath(), claims.get("roles"));
                 return this.onError(exchange, "Access Denied: Insufficient permissions", HttpStatus.FORBIDDEN);
             }
 
 
-            // 4. Add user ID to request header
+            //Add user ID to request header
             // changes made here
             Long userId = claims.get("user_id", Long.class);
             log.debug("Authenticated user: {}, forwarding request to: {}", userId, request.getURI());
