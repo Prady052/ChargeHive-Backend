@@ -16,13 +16,6 @@ public class StationApplication {
 		SpringApplication.run(StationApplication.class, args);
 	}
 
-	/*
-	 * Configure ModelMapper as a spring bean , so that
-	 *  - SC manages its life cycle
-	 *  - It can be injected as a dependency in any other spring bean
-	 *
-	 *
-	 */
 	@Bean
 	ModelMapper modelMapper() {
 		System.out.println("creating model mapper");
@@ -32,6 +25,9 @@ public class StationApplication {
 				.setMatchingStrategy(MatchingStrategies.STRICT)
 				//transfer not null props
 				.setPropertyCondition(Conditions.isNotNull());
+
+		// Skip automatic mapping for the 'ports' collection.
+                // This will be handled manually in the service layer 
 		mapper.typeMap(CreateStationRequestDto.class, Station.class)
 				.addMappings(m -> m.skip(Station::setPorts));
 		return mapper;
