@@ -18,8 +18,14 @@ public class RouterValidator {
     );
 
     // A interface with sam(boolean test(T t)) to test if a given request is for a secured endpoint
-    public Predicate<ServerHttpRequest> isSecured =
-            request -> openApiEndpoints
-                    .stream()
-                    .noneMatch(uri -> request.getURI().getPath().contains(uri));
+//    public Predicate<ServerHttpRequest> isSecured =
+//            request -> openApiEndpoints
+//                    .stream()
+//                    .noneMatch(uri -> request.getURI().getPath().contains(uri));
+    public boolean isSecured(ServerHttpRequest request) {
+        return openApiEndpoints
+                .stream()
+                .noneMatch(uri -> request.getURI().getPath().contains(uri));
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.charginghive.station.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.HashSet;
@@ -26,6 +27,12 @@ public class Station {
 
     @Column(nullable = false)
     private String state;
+
+    @NotNull
+    private Double latitude;
+
+    @NotNull
+    private Double longitude;
 
     @Column(nullable = false)
     private String postalCode;

@@ -5,6 +5,7 @@ import com.charginghive.station.dto.StationApprovalDto;
 import com.charginghive.station.dto.StationDto;
 import com.charginghive.station.service.StationService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,13 +13,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/stations")
+@RequiredArgsConstructor
 public class StationController {
 
     private final StationService stationService;
-
-    public StationController(StationService stationService) {
-        this.stationService = stationService;
-    }
 
     // Endpoint for operator to create/register a new station
     @PostMapping

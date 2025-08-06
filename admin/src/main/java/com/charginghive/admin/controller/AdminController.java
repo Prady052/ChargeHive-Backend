@@ -27,7 +27,8 @@ public class AdminController {
 
     // Station Endpoints
     @PostMapping("/stations/process-approval")
-    public ResponseEntity<Void> processStationApproval(@RequestHeader("X-Admin-Id") Long adminId, @RequestBody StationApprovalDto approvalDto) {
+//    public ResponseEntity<Void> processStationApproval(@RequestHeader("X-Admin-Id") Long adminId, @RequestBody StationApprovalDto approvalDto) {
+    public ResponseEntity<Void> processStationApproval(@RequestHeader("X-User-Id") Long adminId, @RequestBody StationApprovalDto approvalDto) {
         log.info("Received request to process station approval from adminId: {}", adminId);
         log.debug("Approval DTO details: {}", approvalDto);
         adminService.approveOrRejectStation(adminId, approvalDto);
@@ -56,19 +57,6 @@ public class AdminController {
         List<StationDto> unapprovedStations = adminService.getUnapprovedStations();
         log.info("Found {} unapproved stations.", unapprovedStations.size());
         return ResponseEntity.ok(unapprovedStations);
-    }
-
-    // User Endpoints
-    @PostMapping("/users/update-status")
-    public ResponseEntity<Void> updateUserStatus(@RequestHeader("X-Admin-Id") Long adminId, @RequestBody UserStatusUpdateDto statusDto) {
-        log.info("Received request to update user status from adminId: {}", adminId);
-        log.debug("User status update DTO: {}", statusDto);
-
-        adminService.blockOrUnblockUser(adminId, statusDto);
-
-        String status = statusDto.isEnabled() ? "ENABLED (Unblocked)" : "DISABLED (Blocked)";
-        log.info("Successfully updated status for userId: {} to {}", statusDto.getUserId(), status);
-        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/users")

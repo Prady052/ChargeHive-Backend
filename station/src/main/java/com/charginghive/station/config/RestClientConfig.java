@@ -8,7 +8,7 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class RestClientConfig {
     //user service name
-    private static final String USER_SERVICE_URL = "lb://USER-SERVICE";
+    private static final String USER_SERVICE_URL = "lb://AUTH-SERVICE";
 
     @Bean
     @LoadBalanced

@@ -3,6 +3,7 @@ package com.charginghive.auth.entity;
 import java.util.Collection;
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +20,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserRegistration implements UserDetails {
 
 	@Id
@@ -30,16 +32,7 @@ public class UserRegistration implements UserDetails {
 	
 	@Enumerated(EnumType.STRING)
 	private UserRole userRole;
-	
-	
-	public UserRegistration(Long id, String name, String email, String password, UserRole userRole) {
-		super();
-		this.id = id;
-		this.name = name;
-		this.email = email;
-		this.password = password;
-		this.userRole = userRole;
-	}
+
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -1,79 +1,104 @@
 package com.charginghive.admin.service;
 
 import com.charginghive.admin.customException.UserNotFoundException;
-import com.charginghive.admin.dto.StationApprovalDto;
-import com.charginghive.admin.dto.StationDto;
-import com.charginghive.admin.dto.UserDto;
-import com.charginghive.admin.dto.UserStatusUpdateDto;
+import com.charginghive.admin.dto.*;
 import com.charginghive.admin.model.AuditLog;
 import com.charginghive.admin.repository.AuditLogRepository;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@Slf4j
 public class AdminService {
 
     private final RestClient userClient;
     private final RestClient stationClient;
     private final AuditLogRepository auditLogRepository;
 
-    public AdminService(@Qualifier("userRestClient") RestClient userClient,
-                        @Qualifier("stationRestClient") RestClient stationClient,
-                        AuditLogRepository auditLogRepository) {
-        this.userClient = userClient;
-        this.stationClient = stationClient;
+    public AdminService(RestClient.Builder restClientBuilder,AuditLogRepository auditLogRepository) {
+        // Use the service name registered with Eureka, prefixed with "lb://"
+        this.userClient = restClientBuilder.baseUrl("lb://AUTH-SERVICE").build();
+        this.stationClient = restClientBuilder.baseUrl("lb://STATION-SERVICE").build();
         this.auditLogRepository = auditLogRepository;
     }
 
     private String getUsernameById(Long adminId) {
+        try {
+            // Attempt to retrieve the user DTO. If the user is not found,
+            // .retrieve() will throw a WebClientResponseException.NotFound.
+            AdminDto user = userClient.get()
+                    .uri("/api/users/{id}", adminId)
+                    .retrieve()
+                    .body(AdminDto.class);
 
-        Optional<UserDto> userOptional = userClient.get()
-                .uri("/api/users/{id}", adminId)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
-                    throw new UserNotFoundException("Admin user with ID " + adminId + " not found.");
-                })
-                .toEntity(UserDto.class)
-                .getBody() != null ? Optional.ofNullable(userClient.get().uri("/api/users/{id}", adminId).retrieve().body(UserDto.class)) : Optional.empty();
+            if (user == null) {
+                throw new UserNotFoundException("Received an empty response for admin ID: " + adminId);
+            }
 
-        return userOptional
-                .map(UserDto::getUsername)
-                .orElseThrow(() -> new UserNotFoundException("Username not found for admin ID: " + adminId));
+            return user.getUsername();
+
+        } catch (WebClientResponseException e) {
+            throw new UserNotFoundException("Admin user with ID " + adminId + " not found.");
+        }
     }
+
+
+
+
+
+//    private String getUsernameById(Long adminId) {
+//
+//        ResponseEntity<AdminDto> responseEntity = userClient.get()
+//                .uri("/api/users/{id}", adminId)
+//                .retrieve()
+//                .toEntity(AdminDto.class);
+//
+//        // userClient request doesn't return a responseEntity with null,
+//        // it return an HTTP 404 Not Found status.
+//        if (responseEntity.getStatusCode().is4xxClientError()) {
+//            throw new UserNotFoundException("Admin user with ID " + adminId + " not found.");
+//        }
+//
+//        AdminDto user = responseEntity.getBody();
+//
+//        if (user != null) {
+//            String username = user.getUsername();
+//            if (username != null) {
+//                return username;
+//            } else {
+//                throw new UserNotFoundException("Username not found for admin ID: " + adminId);
+//            }
+//        } else {
+//            throw new UserNotFoundException("Admin user with ID " + adminId + " not found.");
+//        }
+//    }
 
 // --- station
 
     @Transactional
     public void approveOrRejectStation(Long userId, StationApprovalDto approvalDto) {
-        // 1. Call the Station Service to update the station
-        System.out.println(userId);
+        //Call the Station Service to update the station
+        //System.out.println(userId);
+        log.info("userId = {}, approval DTO details: {}", userId, approvalDto);
         stationClient.put()
                 .uri("/api/stations/update-status") // Assuming this is the endpoint in Station Service
                 .body(approvalDto)
                 .retrieve()
                 .toBodilessEntity();
 
-        // 2. Create and save an audit log
+        //Create and save an audit log
         String action = approvalDto.isApproved() ? "APPROVE_STATION" : "REJECT_STATION";
         String details = "Station " + (approvalDto.isApproved() ? "approved" : "rejected") + " with reason: " + approvalDto.getReason();
 
-//        AuditLog log = AuditLog.builder()
-//                .adminUsername(getUsernameById(userId))
-//                .action(action)
-//                .targetEntity("Station")
-//                .targetId(approvalDto.getStationId())
-//                .details(details)
-//                .build();
         AuditLog log = AuditLog.builder()
-                .adminUsername("admin 1")
+                .adminUsername(getUsernameById(userId))
                 .action(action)
                 .targetEntity("Station")
                 .targetId(approvalDto.getStationId())
@@ -86,6 +111,8 @@ public class AdminService {
         return stationClient.get()
                 .uri("/api/stations")
                 .retrieve()
+                //telling station client that it has to convert json
+                //to list of stationDto's
                 .body(new ParameterizedTypeReference<List<StationDto>>() {});
     }
 
@@ -97,29 +124,6 @@ public class AdminService {
     }
 
     // --- User
-
-    @Transactional
-    public void blockOrUnblockUser(Long userId, UserStatusUpdateDto statusDto) {
-        // 1. Call the User Service to update the user's status
-        userClient.put()
-                .uri("/api/users/update-status") // Assuming this is the endpoint in User Service
-                .body(statusDto)
-                .retrieve()
-                .toBodilessEntity();
-
-        // 2. Create and save an audit log
-        String action = statusDto.isEnabled() ? "UNBLOCK_USER" : "BLOCK_USER";
-        String details = "User account " + (statusDto.isEnabled() ? "unblocked" : "blocked");
-
-        AuditLog log = AuditLog.builder()
-                .adminUsername(getUsernameById(userId))
-                .action(action)
-                .targetEntity("User")
-                .targetId(statusDto.getUserId())
-                .details(details)
-                .build();
-        auditLogRepository.save(log);
-    }
 
     public List<UserDto> getAllUsers() {
         return userClient.get()

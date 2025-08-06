@@ -20,7 +20,6 @@ import java.util.Arrays;
 @Component
 public class JwtUtil {
 
-    // Injects the same secret key used by the Auth Server
     @Value("${jwt.secret.key}")
     private String jwtSecret;
 

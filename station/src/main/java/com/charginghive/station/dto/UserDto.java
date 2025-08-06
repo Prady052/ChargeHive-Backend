@@ -1,4 +1,4 @@
-package com.charginghive.admin.dto;
+package com.charginghive.station.dto;
 
 import lombok.Data;
 
@@ -7,5 +7,4 @@ public class UserDto {
     private Long id;
     private String username;
     private String email;
-    private String role;
 }

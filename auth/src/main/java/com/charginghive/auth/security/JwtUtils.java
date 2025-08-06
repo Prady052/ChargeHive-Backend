@@ -47,7 +47,7 @@ public class JwtUtils {
 		UserRegistration userDetails = (UserRegistration) authentication.getPrincipal();
 
 		return Jwts.builder()
-				.subject(userDetails.getName())
+				.subject(userDetails.getEmail())
 				.issuedAt(new Date())
 				.expiration(new Date(new Date().getTime() + jwtExpirationMs))
 				.claim("authorities", getAuthoritiesInString(userDetails.getAuthorities()))

@@ -28,13 +28,11 @@ public class AuditLog {
 
     /**
      * The type of entity that was the target of the action.
-     * Examples: "Station", "User". Can be null for actions like "GET_ALL_USERS".
      */
     private String targetEntity;
 
     /**
      * The ID of the entity that was affected.
-     * For example, the ID of the station that was approved or the user who was blocked.
      */
     private Long targetId;
 

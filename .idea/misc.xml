@@ -11,6 +11,7 @@
         <option value="$PROJECT_DIR$/station/station/pom.xml" />
         <option value="$PROJECT_DIR$/station/pom.xml" />
         <option value="$PROJECT_DIR$/authserver/pom.xml" />
+        <option value="$PROJECT_DIR$/auth/pom.xml" />
       </list>
     </option>
   </component>

@@ -4,23 +4,27 @@ import com.charginghive.station.customException.UserNotFoundException;
 import com.charginghive.station.dto.CreateStationRequestDto;
 import com.charginghive.station.dto.StationApprovalDto;
 import com.charginghive.station.dto.StationDto;
+import com.charginghive.station.dto.UserDto;
 import com.charginghive.station.model.Station;
 import com.charginghive.station.model.StationPort;
 import com.charginghive.station.repository.StationPortRepository;
 import com.charginghive.station.repository.StationRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class StationService {
 
     private final StationRepository stationRepository;
@@ -28,21 +32,13 @@ public class StationService {
     private final ModelMapper modelMapper;
     private final RestClient userClient;
 
-    public StationService(StationRepository stationRepository,
-                          StationPortRepository stationPortRepository,
-                          ModelMapper modelMapper,
-                          RestClient userClient) {
-        this.stationRepository = stationRepository;
-        this.stationPortRepository = stationPortRepository;
-        this.modelMapper = modelMapper;
-        this.userClient = userClient;
-    }
-
     @Transactional
     public StationDto createStation(CreateStationRequestDto requestDto) {
         //Verify the ownerId exists by calling the User Service
-//        verifyUserExists(requestDto.getOwnerId());
-         System.out.println(requestDto);
+        if(!verifyUserExists(requestDto.getOwnerId())) {
+            throw new UserNotFoundException("Owner not found with id "+requestDto.getOwnerId());
+        }
+         log.info("Station info {}.", requestDto);
         //Use ModelMapper to map the basic properties
         Station station = modelMapper.map(requestDto, Station.class);
         station.setApproved(false); // New stations must always unapproved by default.
@@ -97,5 +93,25 @@ public class StationService {
 
 //need to implement this method to verify user
 //    private void verifyUserExists(Long ownerId)
+      private boolean verifyUserExists(Long ownerId) {
+
+          try {
+              UserDto user = userClient.get()
+                      .uri("/api/users/{id}", ownerId)
+                      //if any 4xx or 5xx status is received then .retrieve()
+                      //throw exception
+                      .retrieve()
+                      .body(UserDto.class);
+
+              if (user == null) {
+                  throw new UserNotFoundException("Received an empty response for admin ID: " + ownerId);
+              }
+          } catch (WebClientResponseException e) {
+              throw new UserNotFoundException("Admin user with ID " + ownerId + " not found.");
+          }
+
+        return true;
+      }
+
 
 }
