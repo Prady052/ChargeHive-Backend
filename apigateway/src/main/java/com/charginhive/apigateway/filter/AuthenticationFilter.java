@@ -44,7 +44,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
             final String token = this.getAuthHeader(request);
 
-            // Validate the JWT
+            //Validate the JWT
             try {
                 jwtUtil.validateToken(token);
             } catch (Exception e) {
