@@ -14,6 +14,5 @@ public class UserRegistrationReq {
 	private String name;
 	private String email;
 	private String password;
-	// make it list of enum as admin can be a customer also
 	private UserRole userRole;
 }
