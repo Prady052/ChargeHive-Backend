@@ -11,8 +11,8 @@ public class RouterValidator {
 
     //all public endpoints that do not require a JWT for access
     public static final List<String> openApiEndpoints = List.of(
-            "/auth/register",
-            "/auth/login",
+            "/api/auth/register",
+            "/api/auth/login",
             "/test/hello",
             "/eureka"
     );

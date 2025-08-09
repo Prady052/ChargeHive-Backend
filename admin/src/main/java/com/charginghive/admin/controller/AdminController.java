@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@RequestMapping("/api/admin")
+@RequestMapping("/admin")
 public class AdminController {
 
     /*
@@ -27,7 +27,6 @@ public class AdminController {
 
     // Station Endpoints
     @PostMapping("/stations/process-approval")
-//    public ResponseEntity<Void> processStationApproval(@RequestHeader("X-Admin-Id") Long adminId, @RequestBody StationApprovalDto approvalDto) {
     public ResponseEntity<Void> processStationApproval(@RequestHeader("X-User-Id") Long adminId, @RequestBody StationApprovalDto approvalDto) {
         log.info("Received request to process station approval from adminId: {}", adminId);
         log.debug("Approval DTO details: {}", approvalDto);

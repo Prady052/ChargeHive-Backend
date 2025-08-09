@@ -1,27 +1,32 @@
 package com.charginghive.station.controller;
 
+import com.charginghive.station.customException.OwnerIdMissMatchException;
 import com.charginghive.station.dto.CreateStationRequestDto;
 import com.charginghive.station.dto.StationApprovalDto;
 import com.charginghive.station.dto.StationDto;
+import com.charginghive.station.model.Station;
 import com.charginghive.station.service.StationService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/stations")
+@RequestMapping("/stations")
 @RequiredArgsConstructor
+@Slf4j
 public class StationController {
 
     private final StationService stationService;
 
     // Endpoint for operator to create/register a new station
     @PostMapping
-    public ResponseEntity<StationDto> createStation(@Valid @RequestBody CreateStationRequestDto requestDto) {
-        StationDto createdStation = stationService.createStation(requestDto);
+    public ResponseEntity<StationDto> createStation(@RequestHeader("X-User-Id") Long ownerId,@Valid @RequestBody CreateStationRequestDto requestDto) {
+        StationDto createdStation = stationService.createStation(requestDto,ownerId);
         return new ResponseEntity<>(createdStation, HttpStatus.CREATED);
     }
 
@@ -39,7 +44,13 @@ public class StationController {
         return ResponseEntity.ok(stationService.getUnapprovedStations());
     }
 
-    //to approve/reject a station
+    @GetMapping("/get-station-by-owner")
+    public ResponseEntity<List<StationDto>> getStationsByOwner(@RequestHeader("X-User-Id") Long ownerId) {
+        return ResponseEntity.ok(stationService.getStationsByOwner(ownerId));
+    }
+
+
+    //to approve/reject a station for admin only
     @PutMapping("/update-status")
     public ResponseEntity<Void> updateStationStatus(@RequestBody StationApprovalDto approvalDto) {
         stationService.updateStationStatus(approvalDto);
@@ -50,11 +61,20 @@ public class StationController {
 
     // n+1 query problem here
     @DeleteMapping("/{stationId}")
-    public ResponseEntity<Void> deleteStation(@PathVariable Long stationId) {
-        stationService.deleteStation(stationId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> deleteStation(@RequestHeader("X-User-Id") Long ownerId,@PathVariable Long stationId) {
+
+        try{
+            stationService.deleteStation(stationId,ownerId);
+            return ResponseEntity.status(HttpStatus.OK).body("Deleted station with id: " + stationId);
+        }
+        catch (EntityNotFoundException | OwnerIdMissMatchException ex){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        }
     }
 
+
+    //need to fix the logic
+    //simple delete implemented for now
     @DeleteMapping("/ports/{portId}")
     public ResponseEntity<Void> deletePort(@PathVariable Long portId) {
         stationService.deletePort(portId);

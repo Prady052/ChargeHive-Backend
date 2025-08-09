@@ -24,8 +24,8 @@ public class AdminService {
 
     public AdminService(RestClient.Builder restClientBuilder,AuditLogRepository auditLogRepository) {
         // Use the service name registered with Eureka, prefixed with "lb://"
-        this.userClient = restClientBuilder.baseUrl("lb://AUTH-SERVICE").build();
-        this.stationClient = restClientBuilder.baseUrl("lb://STATION-SERVICE").build();
+        this.userClient = restClientBuilder.baseUrl("http://AUTH-SERVICE").build();
+        this.stationClient = restClientBuilder.baseUrl("http://STATION-SERVICE").build();
         this.auditLogRepository = auditLogRepository;
     }
 
@@ -34,7 +34,7 @@ public class AdminService {
             // Attempt to retrieve the user DTO. If the user is not found,
             // .retrieve() will throw a WebClientResponseException.NotFound.
             AdminDto user = userClient.get()
-                    .uri("/api/users/{id}", adminId)
+                    .uri("auth/get-by-id/{id}", adminId)
                     .retrieve()
                     .body(AdminDto.class);
 
@@ -42,15 +42,12 @@ public class AdminService {
                 throw new UserNotFoundException("Received an empty response for admin ID: " + adminId);
             }
 
-            return user.getUsername();
+            return user.getName();
 
         } catch (WebClientResponseException e) {
             throw new UserNotFoundException("Admin user with ID " + adminId + " not found.");
         }
     }
-
-
-
 
 
 //    private String getUsernameById(Long adminId) {
@@ -88,7 +85,7 @@ public class AdminService {
         //System.out.println(userId);
         log.info("userId = {}, approval DTO details: {}", userId, approvalDto);
         stationClient.put()
-                .uri("/api/stations/update-status") // Assuming this is the endpoint in Station Service
+                .uri("/stations/update-status") // Assuming this is the endpoint in Station Service
                 .body(approvalDto)
                 .retrieve()
                 .toBodilessEntity();
@@ -109,7 +106,7 @@ public class AdminService {
 
     public List<StationDto> getAllStations() {
         return stationClient.get()
-                .uri("/api/stations")
+                .uri("/stations")
                 .retrieve()
                 //telling station client that it has to convert json
                 //to list of stationDto's
@@ -118,7 +115,7 @@ public class AdminService {
 
     public List<StationDto> getUnapprovedStations() {
         return stationClient.get()
-                .uri("/api/stations/unapproved")
+                .uri("/stations/unapproved")
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<StationDto>>() {});
     }
@@ -127,7 +124,7 @@ public class AdminService {
 
     public List<UserDto> getAllUsers() {
         return userClient.get()
-                .uri("/api/users")
+                .uri("/auth/get-all")
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<UserDto>>() {});
     }

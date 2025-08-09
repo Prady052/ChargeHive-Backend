@@ -32,7 +32,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-
+        log.warn("Request URI : {}", request.getURI());
         // Check if the endpoint is secured
 //        if (routerValidator.isSecured.test(request)) {
         if (routerValidator.isSecured(request)) {
@@ -56,7 +56,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
             //Check for required role
             if (!hasRequiredRole(request, (List<String>) claims.get("authorities"))) {
-                log.warn("User does not have required role to access {}. Roles: {}", request.getURI().getPath(), claims.get("roles"));
+                log.warn("User does not have required role to access {}. Authorities: {}", request.getURI().getPath(), claims.get("authorities"));
                 return this.onError(exchange, "Access Denied: Insufficient permissions", HttpStatus.FORBIDDEN);
             }
 
@@ -75,7 +75,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
         }
 
-        // Let public endpoints pass through
+        // Let public endpoints pass throughssss
         return chain.filter(exchange);
     }
 
@@ -118,14 +118,16 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 //        if (path.startsWith("/api/admin")) {
 //            return roles.contains("ROLE_ADMIN");
 //        }
-        if (path.startsWith("/station")) {
 
-            if(path.contains("/unapproved")){
+
+        if (path.startsWith("/stations")) {
+
+            if (path.contains("/unapproved")) {
                 return roles.contains("ROLE_ADMIN");
             }
 
-            if(request.getMethod() != HttpMethod.GET) {
-                return roles.contains("ROLE_ADMIN") ||  roles.contains("ROLE_OPERATOR");
+            if (request.getMethod() != HttpMethod.GET) {
+                return roles.contains("ROLE_ADMIN") || roles.contains("ROLE_OPERATOR");
             }
         }
 

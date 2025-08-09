@@ -1,7 +1,9 @@
 package com.charginghive.station.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.HashSet;
@@ -16,36 +18,44 @@ public class Station {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Station name is required")
+    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     @Column(nullable = false)
     private String name;
 
+    @NotBlank(message = "Address is required")
     @Column(nullable = false)
     private String address;
 
+    @NotBlank(message = "City is required")
     @Column(nullable = false)
     private String city;
 
+    @NotBlank(message = "State is required")
     @Column(nullable = false)
     private String state;
 
-    @NotNull
+    @NotNull(message = "Latitude is required")
     private Double latitude;
 
-    @NotNull
+    @NotNull(message = "Longitude is required")
     private Double longitude;
 
+    @NotBlank(message = "Postal code is required")
+    @Size(min = 4, max = 20, message = "Postal code must be between 4 and 20 characters")
     @Column(nullable = false)
     private String postalCode;
 
-    //updated by the Admin Service.
+    // Set by admin; default is false
     @Column(nullable = false)
     private boolean isApproved = false;
 
-    // This links the station to the user who owns it.
+    // Station ownership link
+    @NotNull(message = "Owner ID is required")
     @Column(nullable = false)
     private Long ownerId;
 
-    // A station can have multiple charging ports.
+    // A station can have multiple charging ports
     @OneToMany(mappedBy = "station", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<StationPort> ports = new HashSet<>();
 }

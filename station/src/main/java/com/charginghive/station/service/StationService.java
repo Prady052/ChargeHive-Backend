@@ -1,5 +1,6 @@
 package com.charginghive.station.service;
 
+import com.charginghive.station.customException.OwnerIdMissMatchException;
 import com.charginghive.station.customException.UserNotFoundException;
 import com.charginghive.station.dto.CreateStationRequestDto;
 import com.charginghive.station.dto.StationApprovalDto;
@@ -23,7 +24,7 @@ import java.util.List;
 
 
 @Service
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 @Slf4j
 public class StationService {
 
@@ -32,15 +33,28 @@ public class StationService {
     private final ModelMapper modelMapper;
     private final RestClient userClient;
 
+    public StationService(StationRepository repository, StationPortRepository repositoryPort, ModelMapper modelMapper, RestClient.Builder userClient) {
+           this.stationRepository = repository;
+           this.stationPortRepository = repositoryPort;
+           this.modelMapper = modelMapper;
+           this.userClient = userClient
+                   .baseUrl("http://USER-SERVICE")
+                   .build();
+    }
+
+
+
     @Transactional
-    public StationDto createStation(CreateStationRequestDto requestDto) {
+    public StationDto createStation(CreateStationRequestDto requestDto,Long ownerId) {
         //Verify the ownerId exists by calling the User Service
-        if(!verifyUserExists(requestDto.getOwnerId())) {
-            throw new UserNotFoundException("Owner not found with id "+requestDto.getOwnerId());
+        log.info("ownerId={}",ownerId);
+        if(!verifyUserExists(ownerId)) {
+            throw new UserNotFoundException("Owner not found with id "+ownerId);
         }
          log.info("Station info {}.", requestDto);
         //Use ModelMapper to map the basic properties
         Station station = modelMapper.map(requestDto, Station.class);
+        station.setOwnerId(ownerId);
         station.setApproved(false); // New stations must always unapproved by default.
 
         //Manually handle the nested list of ports to set the bidirectional relationship
@@ -66,6 +80,12 @@ public class StationService {
                 .map(station -> modelMapper.map(station, StationDto.class)).toList();
     }
 
+    public List<StationDto> getStationsByOwner(Long ownerId) {
+        return stationRepository.findByOwnerId(ownerId)
+                .stream().map(station -> modelMapper.map(station, StationDto.class)).toList();
+    }
+
+
     @Transactional
     public void updateStationStatus(StationApprovalDto approvalDto) {
         Station station = stationRepository.findById(approvalDto.getStationId())
@@ -76,11 +96,12 @@ public class StationService {
     }
 
     @Transactional
-    public void deleteStation(Long stationId) {
-        if (!stationRepository.existsById(stationId)) {
-            throw new EntityNotFoundException("Station not found with id: " + stationId);
-        }
-        stationRepository.deleteById(stationId);
+    public void deleteStation(Long stationId, Long ownerId)throws OwnerIdMissMatchException ,EntityNotFoundException{
+            Station station = stationRepository.findById(stationId).orElseThrow(() -> new EntityNotFoundException("Station not found with id: " + stationId));
+            if(ownerId != station.getOwnerId()){
+                throw new OwnerIdMissMatchException("Station does not belong to the owner");
+            }
+            stationRepository.deleteById(stationId);
     }
 
     @Transactional
@@ -91,13 +112,15 @@ public class StationService {
         stationPortRepository.deleteById(portId);
     }
 
+
+
 //need to implement this method to verify user
 //    private void verifyUserExists(Long ownerId)
       private boolean verifyUserExists(Long ownerId) {
 
           try {
               UserDto user = userClient.get()
-                      .uri("/api/users/{id}", ownerId)
+                      .uri("auth/get-by-id/{id}", ownerId)
                       //if any 4xx or 5xx status is received then .retrieve()
                       //throw exception
                       .retrieve()
@@ -112,6 +135,4 @@ public class StationService {
 
         return true;
       }
-
-
 }

@@ -1,6 +1,9 @@
 package com.charginghive.station.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,9 +16,12 @@ public class StationPort {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Connector type is required")
     @Column(nullable = false)
     private String connectorType;
 
+    @NotNull(message = "Max power is required")
+    @DecimalMin(value = "0.1", message = "Max power must be greater than 0")
     @Column(nullable = false)
     private double maxPowerKw;
 
