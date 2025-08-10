@@ -1,10 +1,9 @@
-// The service layer in Spring Boot responsible for handling user-related operations such as registration, token generation, user management, etc.
 package com.charginghive.auth.service;
 
-// Importing necessary DTOs (Data Transfer Objects) used to transfer user-related data between layers.
-import com.charginghive.auth.dto.UserDto;
-import com.charginghive.auth.dto.UserEdirDto;
-import com.charginghive.auth.dto.UserResDto;
+
+import com.charginghive.auth.dto.*;
+import com.charginghive.auth.dto.AdminUserCreateRequest;
+import com.charginghive.auth.dto.AdminUserUpdateRequest;
 import com.charginghive.auth.entity.UserRole;
 
 // Utility classes and Spring Framework dependencies
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 // Entity and repository related to User
-import com.charginghive.auth.dto.UserRegistrationReq;
 import com.charginghive.auth.entity.UserRegistration;
 import com.charginghive.auth.repository.UserRepository;
 import com.charginghive.auth.security.JwtUtils;
@@ -25,6 +23,9 @@ import lombok.AllArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+// newly added: custom exceptions for clearer errors
+import com.charginghive.auth.customException.NotFoundException;
 
 @Service
 @Transactional
@@ -39,44 +40,21 @@ public class UserService {
 	/**
 	 * Registers a new user in the system.
 	 * @param credential UserRegistrationReq DTO containing user signup details.
-	 * @return Success or failure message based on outcome.
 	 */
-	public UserDto saveUserDetails(UserRegistrationReq credential) {
-//		String mesg = "user regestration failed!";
-//		try {
-//			// Logging raw password for debug purposes (not recommended in production)
-//			// System.out.println("user passowrd is: " + credential.getPassword());
-//
-//			// Encode the password before storing it in DB
-//			credential.setPassword(passwordEncoder.encode(credential.getPassword()));
-//
-//			// Convert DTO to Entity and save to database
-//			UserRegistration dbUser = repository.save(modelMapper.map(credential, UserRegistration.class));
-//            return modelMapper.map(dbUser, UserDto.class);
-
-			try {
-				credential.setPassword(passwordEncoder.encode(credential.getPassword()));
-				UserRegistration userEntity = modelMapper.map(credential, UserRegistration.class);
-				UserRegistration savedUser = repository.save(userEntity);
-				return modelMapper.map(savedUser, UserDto.class);
-			} catch (Exception ex) {
-				System.out.println("Error occurred while registering user: " + ex.getMessage());
-				throw new RuntimeException("User registration failed");
-			}
-
-
-//
-//		} catch (Exception ex) {
-//			// Exception handling with logging
-//			System.out.println("Error occured during registering user " + ex.getMessage());
-//		}
-//		return null;
+	public UserResDto saveUserDetails(UserRegistrationReq credential) {
+		try {
+			credential.setPassword(passwordEncoder.encode(credential.getPassword()));
+			UserRegistration userEntity = modelMapper.map(credential, UserRegistration.class);
+			UserRegistration savedUser = repository.save(userEntity);
+			return modelMapper.map(savedUser, UserResDto.class);
+		} catch (Exception ex) {
+			System.out.println("Error occurred while registering user: " + ex.getMessage());
+			throw new RuntimeException("User registration failed");
+		}
 	}
 
 	/**
 	 * Generates a JWT token for authenticated user.
-	 * @param validAuth Spring Security authentication object.
-	 * @return JWT token string.
 	 */
 	public String generateToken(Authentication validAuth) {
 		return jwtUtils.generateJwtToken(validAuth);
@@ -84,16 +62,13 @@ public class UserService {
 
 	/**
 	 * Fetches all non-admin users from the database.
-	 * @return List of UserResDto objects.
 	 */
 	public List<UserResDto> getAllUsers() {
 		List<UserResDto> list = new ArrayList<>();
 		try {
-			// Fetch all users and filter out ADMIN roles before mapping to DTO
 			list = repository.findAll().stream()
 					.filter(p -> p.getUserRole() != UserRole.ROLE_ADMIN)
 					.map(this::mapToDto)
-//					.map(p -> modelMapper.map(p, UserResDto.class))
 					.collect(Collectors.toList());
 		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
@@ -101,42 +76,43 @@ public class UserService {
 		return list;
 	}
 
-	/**
-	 * Updates existing user's details by their ID.
-	 * @param credential UserEdirDto DTO containing updated fields.
-	 * @param id User ID to be updated.
-	 * @return Success or failure message.
-	 */
-	public String editUserDetails(UserEdirDto credential, Long id) {
+	public String editUserDetails(UserEditDto credential, Long id) {
 		String msg = "User update failed!";
 		try {
-			// Fetch the user securely using their ID or throw exception if not found
 			UserRegistration user = repository.findById(id)
-					.orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+					.orElseThrow(() -> new NotFoundException("User not found with ID: " + id)); // edited: custom 404
 
-			// Update name, email and encoded password
 			user.setFirstName(credential.getFirstName());
 			user.setLastName(credential.getLastName());
 			user.setEmail(credential.getEmail());
-			user.setPassword(passwordEncoder.encode(credential.getPassword()));
-
-			// Save updated user back to DB
+			if (credential.getPassword() != null && !credential.getPassword().isBlank()) {
+				user.setPassword(passwordEncoder.encode(credential.getPassword()));
+			}
 			repository.save(user);
 			msg = "User updated successfully!";
-		} catch (Exception ex) {
-			System.out.println("Error updating user: " + ex.getMessage());
-		}
-		return msg;
-	}
+        } catch (Exception ex) {
+            System.out.println("Error updating user: " + ex.getMessage());
+        }
+        return msg;
+    }
 
-	/**
-	 * Returns a specific user by their ID for admin view.
-	 * @param id The ID of the user to retrieve.
-	 * @return UserAdminDto object with complete user details.
-	 */
-	public UserDto getById(Long id) {
-		UserRegistration user = repository.findById(id).orElseThrow(); // Throws NoSuchElementException if not found
-		return modelMapper.map(user, UserDto.class);
+    /*
+       new endpoints added for password change/reset
+     */
+
+    public void changePassword(Long userId, ChangePasswordRequest req) {
+        UserRegistration user = repository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId)); // edited
+        if (!passwordEncoder.matches(req.getCurrentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect"); // edited
+        }
+        user.setPassword(passwordEncoder.encode(req.getNewPassword()));
+        repository.save(user);
+    }
+
+	public UserResDto getById(Long id) {
+		UserRegistration user = repository.findById(id).orElseThrow(() -> new NotFoundException("User not found with ID: " + id)); // edited
+		return modelMapper.map(user, UserResDto.class);
 	}
 
 	public UserResDto mapToDto(UserRegistration user) {
@@ -144,9 +120,71 @@ public class UserService {
 				.email(user.getEmail())
 				.id(user.getId())
 				.firstName(user.getFirstName())
+                .phoneNumber(user.getPhoneNumber())
 				.lastName(user.getLastName())
 				.userRole(user.getUserRole())
 				.build();
-
 	}
+
+	// ================== Admin operations (used by Admin service) ==================
+
+	// newly added: admin create user with optional role
+	public UserDto createUserAdmin(AdminUserCreateRequest req) {
+		UserRegistration user = new UserRegistration();
+		user.setFirstName(req.getFirstName());
+		user.setLastName(req.getLastName());
+		user.setEmail(req.getEmail());
+		user.setPassword(passwordEncoder.encode(req.getPassword()));
+        //have to change this logic
+		UserRole role = UserRole.ROLE_DRIVER;
+		if (req.getUserRole() != null) {
+			try { role = req.getUserRole(); } catch (IllegalArgumentException ignored) {}
+		}
+		user.setUserRole(role);
+		UserRegistration saved = repository.save(user);
+		return modelMapper.map(saved, UserDto.class);
+	}
+
+	// newly added: admin update user with optional fields
+	public UserDto updateUserAdmin(Long id, AdminUserUpdateRequest req) {
+		UserRegistration user = repository.findById(id)
+				.orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
+		if (req.getFirstName() != null) user.setFirstName(req.getFirstName());
+		if (req.getLastName() != null) user.setLastName(req.getLastName());
+		if (req.getEmail() != null) user.setEmail(req.getEmail());
+		if (req.getPassword() != null && !req.getPassword().isBlank()) {
+			user.setPassword(passwordEncoder.encode(req.getPassword()));
+		}
+		if (req.getUserRole() != null) {
+			try { user.setUserRole(req.getUserRole()); } catch (IllegalArgumentException ignored) {}
+		}
+		UserRegistration saved = repository.save(user);
+		return modelMapper.map(saved, UserDto.class);
+	}
+
+	// newly added: admin delete user
+	public void deleteUser(Long id) {
+		UserRegistration user = repository.findById(id)
+				.orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
+		repository.delete(user);
+	}
+
+	// newly added: admin assign roles to user (take first role)
+	public void assignRoles(Long id, AdminAssignRolesRequest req) {
+		UserRegistration user = repository.findById(id)
+				.orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
+		if (req.getRoles() != null && !req.getRoles().isEmpty()) {
+			String roleStr = req.getRoles().get(0);
+			try { user.setUserRole(UserRole.valueOf(roleStr)); } catch (IllegalArgumentException ignored) {}
+			repository.save(user);
+		}
+	}
+
+    /**
+     * Check if a user exists by ID - required by booking service
+     */
+    public boolean userExists(Long id) {
+        return repository.existsById(id);
+    }
+
 }

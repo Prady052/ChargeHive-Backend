@@ -21,15 +21,25 @@
         </processorPath>
         <module name="auth-service" />
       </profile>
-      <profile name="Annotation profile for station" enabled="true">
+      <profile name="Annotation profile for station-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
+        </processorPath>
+        <module name="station" />
+        <module name="admin" />
+      </profile>
+      <profile name="Annotation profile for booking-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
         </processorPath>
-        <module name="station" />
-        <module name="admin" />
+        <module name="booking-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -42,6 +52,7 @@
       <module name="apiGateway" options="-parameters" />
       <module name="auth" options="-parameters" />
       <module name="auth-service" options="-parameters" />
+      <module name="booking-service" options="-parameters" />
       <module name="discovery-server" options="-parameters" />
       <module name="microservices" options="-parameters" />
       <module name="station" options="-parameters" />
