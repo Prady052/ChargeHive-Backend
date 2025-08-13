@@ -42,6 +42,7 @@ public class Station {
     @NotNull(message = "Longitude is required")
     private Double longitude;
 
+
     @NotBlank(message = "Postal code is required")
     @Size(min = 4, max = 20, message = "Postal code must be between 4 and 20 characters")
     @Column(nullable = false)

@@ -83,6 +83,13 @@ public class AuthController {
 		return ResponseEntity.status(HttpStatus.OK).body(userService.getById(id));
 	}
 
+    @GetMapping("/me")
+    public ResponseEntity<?> getDetails(@RequestHeader("X-User-Id") Long userId){
+        log.info("Received request to get user details for userId: {}", userId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getById(userId));
+    }
+
 	// newly added: alias path for admin compatibility
 //	@GetMapping("/../get-by-id/{id}")
 //	public ResponseEntity<?> getUserByIdAlias(@PathVariable("id") Long id){
