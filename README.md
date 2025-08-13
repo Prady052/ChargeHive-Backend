@@ -4,7 +4,7 @@ A comprehensive microservices-based backend system for electric vehicle charging
 
 <div align="center">
 
-![Java](https://img.shields.io/badge/Java-17-orange)
+![Java](https://img.shields.io/badge/Java-21-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.4-green)
 ![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.0.0-blue)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0+-yellow)
