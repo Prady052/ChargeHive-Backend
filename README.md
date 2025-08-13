@@ -154,8 +154,8 @@ Before running the application, ensure you have:
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd chargeHive-backend
+git clone https://github.com/Prady052/ChargeHive-Backend.git chargehive-backend
+cd chargehive-backend
 ```
 
 ### 2. Database Setup
@@ -388,21 +388,3 @@ Each service includes comprehensive logging:
 ## 📄 License
 
 This project is licensed under the MIT License.
-
-## 📞 Support
-
-For support and questions:
-
-- Create an issue in the repository
-- Contact the development team
-- Check the API documentation
-
-## 🔄 Version History
-
-- **v1.0.0**: Initial release with core microservices
-- **Features**: User management, station management, booking system, admin dashboard
-- **Architecture**: Spring Boot microservices with Eureka discovery and API Gateway
-
----
-
-**Note**: This is a production-ready backend system designed for scalability and maintainability. Ensure proper security measures and monitoring are in place before deploying to production environments.
