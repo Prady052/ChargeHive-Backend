@@ -1,11 +1,13 @@
 package com.charginghive.auth.dto;
 
 
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuthResponse {
     private String token;
     private UserResDto user;

@@ -59,22 +59,16 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                 return this.onError(exchange, "Access Denied: Insufficient permissions", HttpStatus.FORBIDDEN);
             }
 
-
-            // Add user ID to request header
-            // changes made here
             Long userId = claims.get("user_id", Long.class);
             log.debug("Authenticated user: {}, forwarding request to: {}", userId, request.getURI());
 
-
-            //changes made here
             ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
                     .header("X-User-Id", userId.toString())
                     .build();
 
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
         }
-
-        // Let public endpoints pass throughssss
+        
         return chain.filter(exchange);
     }
 

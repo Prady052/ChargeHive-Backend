@@ -8,33 +8,29 @@ import com.charginghive.admin.model.AuditLog;
 import com.charginghive.admin.repository.AuditLogRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
 
-// newly added
 @Service
 @Slf4j
-public class StationManagementService { // newly added
+public class StationManagementService {
 
-    private final RestClient userClient;    // newly added
-    private final RestClient stationClient; // newly added
-    private final AuditLogRepository auditLogRepository; // newly added
+    private final RestClient userClient;
+    private final RestClient stationClient;
+    private final AuditLogRepository auditLogRepository;
 
-    // newly added
+
     public StationManagementService(RestClient.Builder restClientBuilder, AuditLogRepository auditLogRepository) {
         this.userClient = restClientBuilder.baseUrl("http://AUTH-SERVICE").build();
         this.stationClient = restClientBuilder.baseUrl("http://STATION-SERVICE").build();
         this.auditLogRepository = auditLogRepository;
     }
 
-    // newly added
+
     private String getUsernameById(Long adminId) {
         try {
             AdminDto user = userClient.get()
@@ -51,7 +47,7 @@ public class StationManagementService { // newly added
         }
     }
 
-    // newly added
+
     @Transactional
     public void approveOrRejectStation(Long userId, StationApprovalDto approvalDto) {
         log.info("userId = {}, approval DTO details: {}", userId, approvalDto);
@@ -75,7 +71,7 @@ public class StationManagementService { // newly added
         auditLogRepository.save(logEntry);
     }
 
-    // newly added: convenience helper to approve by id
+
     @Transactional
     public void approveStationById(Long userId, Long stationId, String reason) {
         StationApprovalDto dto = new StationApprovalDto();
@@ -85,7 +81,7 @@ public class StationManagementService { // newly added
         approveOrRejectStation(userId, dto);
     }
 
-    // newly added: convenience helper to reject by id
+
     @Transactional
     public void rejectStationById(Long userId, Long stationId, String reason) {
         StationApprovalDto dto = new StationApprovalDto();
@@ -95,34 +91,19 @@ public class StationManagementService { // newly added
         approveOrRejectStation(userId, dto);
     }
 
-    // newly added
+
     public List<StationDto> getAllStations() {
         return stationClient.get()
                 .uri("/stations")
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<StationDto>>() {});
+                .body(new ParameterizedTypeReference<>() {});
     }
 
-    // newly added
+
     public List<StationDto> getUnapprovedStations() {
         return stationClient.get()
                 .uri("/stations/unapproved")
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<StationDto>>() {});
-    }
-
-    // newly added: delegate search to Station Service search endpoint
-    public List<StationDto> searchStations(String query, String city, Double minPrice, Double maxPrice, Boolean available) {
-        StringBuilder uri = new StringBuilder("/stations/search?");
-        boolean started = false;
-        if (query != null) { uri.append("query=").append(query); started = true; }
-        if (city != null) { uri.append(started ? "&" : "").append("city=").append(city); started = true; }
-        if (minPrice != null) { uri.append(started ? "&" : "").append("minPrice=").append(minPrice); started = true; }
-        if (maxPrice != null) { uri.append(started ? "&" : "").append("maxPrice=").append(maxPrice); started = true; }
-        if (available != null) { uri.append(started ? "&" : "").append("available=").append(available); }
-        return stationClient.get()
-                .uri(uri.toString())
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<StationDto>>() {});
+                .body(new ParameterizedTypeReference<>() {});
     }
 }

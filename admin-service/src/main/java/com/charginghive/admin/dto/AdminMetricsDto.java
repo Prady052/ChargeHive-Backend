@@ -1,11 +1,10 @@
 package com.charginghive.admin.dto;
 
-import lombok.AllArgsConstructor; // newly added
-import lombok.Builder; // newly added
-import lombok.Data; // newly added
-import lombok.NoArgsConstructor; // newly added
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-// newly added: metrics dto to present counts in admin dashboard
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

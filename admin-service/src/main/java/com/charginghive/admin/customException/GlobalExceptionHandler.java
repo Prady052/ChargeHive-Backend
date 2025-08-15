@@ -1,23 +1,21 @@
 package com.charginghive.admin.customException;
 
-import jakarta.validation.ConstraintViolationException; // edited: keep validation support
-import org.springframework.http.HttpHeaders;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.client.RestClientException; // newly added
-import org.springframework.web.client.RestClientResponseException; // newly added
-import org.springframework.web.server.ResponseStatusException; // newly added
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
 // edited: centralized exception handling to standardize error responses
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
@@ -35,11 +33,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.valueOf(ex.getStatusCode().value()), ex.getReason(), null);
     }
 
-    @ExceptionHandler(RestClientResponseException.class) // newly added
-    public ResponseEntity<Object> handleDownstreamResponse(RestClientResponseException ex) {
-        // Map downstream HTTP status to BAD_GATEWAY to indicate upstream dependency failure
-        return build(HttpStatus.BAD_GATEWAY, "Downstream service error: " + ex.getStatusCode().value(), null);
-    }
 
     @ExceptionHandler(RestClientException.class) // newly added
     public ResponseEntity<Object> handleDownstream(RestClientException ex) {
@@ -77,6 +70,6 @@ public class GlobalExceptionHandler {
         if (details != null && !details.isEmpty()) {
             body.put("details", details);
         }
-        return new ResponseEntity<>(body, new HttpHeaders(), status);
+        return ResponseEntity.status(status).body(body);
     }
 }

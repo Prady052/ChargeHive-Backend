@@ -3,7 +3,6 @@ package com.charginghive.station.controller;
 
 import com.charginghive.station.dto.*;
 import com.charginghive.station.service.StationService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,7 +22,7 @@ public class StationController {
     private final StationService stationService;
 
     @PostMapping
-    public ResponseEntity<StationDto> createStation(@RequestHeader("X-User-Id") Long ownerId,@Valid @RequestBody CreateStationRequestDto requestDto) {
+    public ResponseEntity<StationDto> createStation(@RequestHeader("X-User-Id") Long ownerId,@RequestBody CreateStationRequestDto requestDto) {
         StationDto createdStation = stationService.createStation(requestDto,ownerId);
         return new ResponseEntity<>(createdStation, HttpStatus.CREATED);
     }
@@ -43,7 +42,7 @@ public class StationController {
 
     // added: update by id (partial update using non-null fields)
     @PutMapping("/{id}")
-    public ResponseEntity<StationDto> update(@PathVariable Long id, @Valid @RequestBody UpdateStationRequestDto request) {
+    public ResponseEntity<StationDto> update(@PathVariable Long id,@RequestBody UpdateStationRequestDto request) {
         return ResponseEntity.ok(stationService.updateStation(id, request));
     }
 
@@ -71,7 +70,7 @@ public class StationController {
     // added: add port to station
     @PostMapping("/{id}/ports")
     @ResponseStatus(HttpStatus.CREATED)
-    public StationPortDto addPort(@PathVariable Long id, @Valid @RequestBody CreatePortRequestDto request) {
+    public StationPortDto addPort(@PathVariable Long id,@RequestBody CreatePortRequestDto request) {
         return stationService.addPort(id, request);
     }
 
@@ -85,7 +84,7 @@ public class StationController {
     @PutMapping("/ports/{portId}")
     public ResponseEntity<StationDto> updatePort(@RequestHeader("X-User-Id") Long ownerId,
                                                  @PathVariable Long portId,
-                                                 @Valid @RequestBody CreatePortRequestDto requestDto) {
+                                                 @RequestBody CreatePortRequestDto requestDto) {
         return ResponseEntity.ok(stationService.updatePort(ownerId, portId, requestDto));
     }
 
@@ -102,8 +101,6 @@ public class StationController {
         return ResponseEntity.ok(stationService.getUnapprovedStations());
     }
 
-
-    //newly added
     // search
     @GetMapping("/search")
     public ResponseEntity<List<StationDto>> searchStations(@RequestParam(required = false) String query,

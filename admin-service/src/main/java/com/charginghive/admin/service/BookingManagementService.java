@@ -20,15 +20,13 @@ import java.util.Map;
 @Slf4j
 public class BookingManagementService {
     private final RestClient bookingClient;
-    private final RestClient userClient;    // newly added
-    private final RestClient stationClient;
+    private final RestClient userClient;
     private final AuditLogRepository auditLogRepository;
 
 
     public BookingManagementService(RestClient.Builder restClientBuilder, AuditLogRepository auditLogRepository) {
         this.bookingClient = restClientBuilder.baseUrl("http://BOOKING-SERVICE").build();
         this.userClient = restClientBuilder.baseUrl("http://AUTH-SERVICE").build();
-        this.stationClient = restClientBuilder.baseUrl("http://STATION-SERVICE").build();
         this.auditLogRepository = auditLogRepository;
     }
 

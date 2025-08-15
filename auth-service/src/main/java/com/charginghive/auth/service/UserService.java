@@ -5,15 +5,11 @@ import com.charginghive.auth.dto.*;
 import com.charginghive.auth.dto.AdminUserCreateRequest;
 import com.charginghive.auth.dto.AdminUserUpdateRequest;
 import com.charginghive.auth.entity.UserRole;
-
-// Utility classes and Spring Framework dependencies
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-// Entity and repository related to User
 import com.charginghive.auth.entity.UserRegistration;
 import com.charginghive.auth.repository.UserRepository;
 import com.charginghive.auth.security.JwtUtils;
@@ -23,8 +19,6 @@ import lombok.AllArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-// newly added: custom exceptions for clearer errors
 import com.charginghive.auth.customException.NotFoundException;
 
 @Service
@@ -128,7 +122,7 @@ public class UserService {
 
 	// ================== Admin operations (used by Admin service) ==================
 
-	// newly added: admin create user with optional role
+	// admin create user with optional role
 	public UserDto createUserAdmin(AdminUserCreateRequest req) {
 		UserRegistration user = new UserRegistration();
 		user.setFirstName(req.getFirstName());
@@ -145,7 +139,7 @@ public class UserService {
 		return modelMapper.map(saved, UserDto.class);
 	}
 
-	// newly added: admin update user with optional fields
+	// admin update user with optional fields
 	public UserDto updateUserAdmin(Long id, AdminUserUpdateRequest req) {
 		UserRegistration user = repository.findById(id)
 				.orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
@@ -162,14 +156,14 @@ public class UserService {
 		return modelMapper.map(saved, UserDto.class);
 	}
 
-	// newly added: admin delete user
+	// admin delete user
 	public void deleteUser(Long id) {
 		UserRegistration user = repository.findById(id)
 				.orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
 		repository.delete(user);
 	}
 
-	// newly added: admin assign roles to user (take first role)
+	// admin assign roles to user (take first role)
 	public void assignRoles(Long id, AdminAssignRolesRequest req) {
 		UserRegistration user = repository.findById(id)
 				.orElseThrow(() -> new NotFoundException("User not found with ID: " + id));

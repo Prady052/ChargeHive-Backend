@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -21,7 +22,7 @@ import java.util.List;
 @RequestMapping("/bookings")
 @RequiredArgsConstructor
 @Slf4j
-//@CrossOrigin(origins = "*")
+@Validated
 public class BookingController {
 
     private final BookingService bookingService;
@@ -30,7 +31,7 @@ public class BookingController {
      * Create a new booking
      */
     @PostMapping
-    public ResponseEntity<BookingResponseDto> createBooking(@RequestHeader("X-User-Id") Long id,@Valid @RequestBody BookingRequestDto requestDto) {
+    public ResponseEntity<BookingResponseDto> createBooking(@RequestHeader("X-User-Id") Long id,@RequestBody BookingRequestDto requestDto) {
         log.info("Creating new booking for user: {}", id);
         BookingResponseDto response = bookingService.createBooking(requestDto,id);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

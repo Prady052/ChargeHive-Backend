@@ -3,7 +3,6 @@ package com.charginghive.auth.controller;
 import com.charginghive.auth.dto.*;
 import com.charginghive.auth.dto.AdminUserCreateRequest;
 import com.charginghive.auth.dto.AdminUserUpdateRequest;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -13,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.charginghive.auth.service.UserService;
@@ -25,6 +25,7 @@ import java.util.Map;
 @RequestMapping("/auth")
 @AllArgsConstructor
 @Slf4j
+@Validated
 public class AuthController {
 
 	private final UserService userService;
@@ -32,7 +33,7 @@ public class AuthController {
 	private final ModelMapper modelMapper;
 
 	@PostMapping("/register")
-	public ResponseEntity<?> addNewUser(@Valid @RequestBody UserRegistrationReq credential){
+	public ResponseEntity<?> addNewUser(@RequestBody UserRegistrationReq credential){
 		log.info("Registering user with email: {}", credential.getEmail());
 		try {
 			UserResDto user = userService.saveUserDetails(credential);
@@ -44,7 +45,7 @@ public class AuthController {
 	}
 	
 	@PostMapping("/login")
-	public ResponseEntity<?> authenticateAndGetTocken(@Valid @RequestBody UserSignInReq signInReq){
+	public ResponseEntity<?> authenticateAndGetTocken(@RequestBody UserSignInReq signInReq){
 
 		try{
 			log.info("Attempting sign-in for email: {}", signInReq.getEmail());
@@ -70,14 +71,12 @@ public class AuthController {
 		return ResponseEntity.status(HttpStatus.OK).body(userService.getAllUsers());
 	}
 
-	// to do make test with postman
 	@PutMapping("/edit-user")
 	public ResponseEntity<?> editUser(@RequestBody UserEditDto credential, @RequestHeader("X-User-Id") Long userId){
 		log.info("update user details: {}", credential);
 		return ResponseEntity.status(HttpStatus.CREATED).body(userService.editUserDetails(credential, userId));
 	}
 
-	// get user by id (primary path)
 	@GetMapping("/get-by-id/{id}")
 	public ResponseEntity<?> getUserById(@PathVariable("id") Long id){
 		return ResponseEntity.status(HttpStatus.OK).body(userService.getById(id));
@@ -90,12 +89,6 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(userService.getById(userId));
     }
 
-	// newly added: alias path for admin compatibility
-//	@GetMapping("/../get-by-id/{id}")
-//	public ResponseEntity<?> getUserByIdAlias(@PathVariable("id") Long id){
-//		return ResponseEntity.status(HttpStatus.OK).body(userService.getById(id));
-//	}
-
     // logout (stateless JWT; noop for now)
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
@@ -104,21 +97,19 @@ public class AuthController {
 
     @PutMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestHeader("X-User-Id") Long userId,
-                                            @Valid @RequestBody ChangePasswordRequest req) {
+                                            @RequestBody ChangePasswordRequest req) {
         userService.changePassword(userId, req);
         return ResponseEntity.ok(Map.of("message", "Password changed"));
     }
 
-    // newly added: admin endpoints (consumed by Admin service)
-    //dto need phone number to be added and role must be enum
     @PostMapping("/admin/users")
-    public ResponseEntity<UserDto> adminCreateUser(@Valid @RequestBody AdminUserCreateRequest req) {
+    public ResponseEntity<UserDto> adminCreateUser(@RequestBody AdminUserCreateRequest req) {
         UserDto created = userService.createUserAdmin(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/admin/users/{id}")
-    public ResponseEntity<UserDto> adminUpdateUser(@PathVariable Long id, @Valid @RequestBody AdminUserUpdateRequest req) {
+    public ResponseEntity<UserDto> adminUpdateUser(@PathVariable Long id,@RequestBody AdminUserUpdateRequest req) {
         return ResponseEntity.ok(userService.updateUserAdmin(id, req));
     }
 
@@ -128,21 +119,8 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    // role endpoints used by admin service; since roles are enum, update/delete are no-ops here and return 204
-//    @PutMapping("/admin/roles/{id}")
-//    public ResponseEntity<Void> adminUpdateRoleNoop(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-//        // newly added: no-op because roles are enum in this service
-//        return ResponseEntity.noContent().build();
-//    }
-//
-//    @DeleteMapping("/admin/roles/{id}")
-//    public ResponseEntity<Void> adminDeleteRoleNoop(@PathVariable Long id) {
-//        // newly added: no-op because roles are enum in this service
-//        return ResponseEntity.noContent().build();
-//    }
-
     @PostMapping("/admin/users/{id}/roles")
-    public ResponseEntity<Void> adminAssignRoles(@PathVariable Long id, @Valid @RequestBody AdminAssignRolesRequest req) {
+    public ResponseEntity<Void> adminAssignRoles(@PathVariable Long id,@RequestBody AdminAssignRolesRequest req) {
         userService.assignRoles(id, req);
         return ResponseEntity.noContent().build();
     }

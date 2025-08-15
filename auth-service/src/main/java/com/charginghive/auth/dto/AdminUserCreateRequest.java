@@ -3,10 +3,14 @@ package com.charginghive.auth.dto;
 import com.charginghive.auth.entity.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Data; // newly added
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-// newly added: payload for admin to create users
+// payload for admin to create users
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AdminUserCreateRequest {
 
     @NotBlank(message = "Phone number is required")
@@ -16,7 +20,6 @@ public class AdminUserCreateRequest {
             message = "Invalid phone number format"
     )
     private String phoneNumber;
-
 
     @NotNull(message = "User role must not be null")
     @Enumerated(EnumType.STRING)

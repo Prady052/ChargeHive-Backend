@@ -2,25 +2,24 @@ package com.charginghive.admin.controller;
 
 import com.charginghive.admin.dto.*;
 import com.charginghive.admin.service.UserManagementService;
-import jakarta.validation.Valid; // newly added
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated; // newly added
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// newly added
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
 @Slf4j
-@Validated // newly added: enable validation for path/query/body params
-public class UserAdminController { // newly added
+@Validated
+public class UserAdminController {
 
-    private final UserManagementService userManagementService; // newly added
+    private final UserManagementService userManagementService;
 
 
     @GetMapping("/users")
@@ -33,7 +32,7 @@ public class UserAdminController { // newly added
 
     // newly added
     @PostMapping("/users")
-    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserCreateRequest request) { // edited: added @Valid
+    public ResponseEntity<UserDto> createUser(@RequestBody UserCreateRequest request) {
         UserDto created = userManagementService.createUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -46,7 +45,7 @@ public class UserAdminController { // newly added
 
     // newly added
     @PutMapping("/users/{id}")
-    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest request) { // edited: added @Valid
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id,@RequestBody UserUpdateRequest request) {
         return ResponseEntity.ok(userManagementService.updateUser(id, request));
     }
 
@@ -59,14 +58,14 @@ public class UserAdminController { // newly added
 
     // newly added
     @PutMapping("/roles/{id}")
-    public ResponseEntity<Void> updateRole(@PathVariable Long id, @Valid @RequestBody RoleUpdateRequest request) { // edited: added @Valid
+    public ResponseEntity<Void> updateRole(@PathVariable Long id,@RequestBody RoleUpdateRequest request) {
         userManagementService.updateRole(id, request);
         return ResponseEntity.noContent().build();
     }
 
 
     // must return user with recent 5-10 bookings
-    @GetMapping("/users/{userId}/details") // edited: path changed to avoid conflict with /users/{id}
+    @GetMapping("/users/{userId}/details")
     public ResponseEntity<UserDetailDto> getUserWithBooking(@PathVariable("userId") Long userId) {
         log.info("Received request to get user details with bookings for userId: {}", userId);
         UserDetailDto user = userManagementService.getUserDetials(userId);

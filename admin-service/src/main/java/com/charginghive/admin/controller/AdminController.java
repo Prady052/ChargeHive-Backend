@@ -1,6 +1,6 @@
 package com.charginghive.admin.controller;
 
-import com.charginghive.admin.dto.AdminMetricsDto; // newly added
+import com.charginghive.admin.dto.AdminMetricsDto;
 import com.charginghive.admin.model.AuditLog;
 import com.charginghive.admin.service.AdminService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    // Audit Log Endpoint
+    // newly added: Audit Log Endpoint
     @GetMapping("/audit-logs")
     public ResponseEntity<List<AuditLog>> getAuditLogs() {
         log.info("Received request to get audit logs.");

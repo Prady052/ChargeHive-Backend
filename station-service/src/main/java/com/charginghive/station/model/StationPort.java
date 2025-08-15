@@ -20,7 +20,6 @@ public class StationPort {
     @Column(nullable = false)
     private String connectorType;
 
-    // Pricing per hour in INR
     @Column
     private Double pricePerHour;
 

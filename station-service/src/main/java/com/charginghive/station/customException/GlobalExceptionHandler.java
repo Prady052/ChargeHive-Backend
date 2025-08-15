@@ -6,24 +6,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-// added: centralized exception handling to standardize error responses
-@ControllerAdvice
+// centralized exception handling to standardize error responses
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // added: handle not found
+    // handle not found
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Object> handleNotFound(NotFoundException ex) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), null);
     }
 
-    // added: handle validation errors from @Valid on request bodies
+    // handle validation errors from @Valid on request bodies
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, Object> details = new HashMap<>();
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Validation failed", details);
     }
 
-    // added: handle validation errors from @Validated on path/query params
+    // handle validation errors from @Validated on path/query params
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Object> handleConstraint(ConstraintViolationException ex) {
         Map<String, Object> details = new HashMap<>();
@@ -42,19 +42,19 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Constraint violation", details);
     }
 
-    // added: fallback for illegal arguments
+    // fallback for illegal arguments
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgument(IllegalArgumentException ex) {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), null);
     }
 
-    // added: default fallback
+    // default fallback
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGeneric(Exception ex) {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", null);
     }
 
-    // added: simple API error envelope
+    // simple API error envelope
     private ResponseEntity<Object> build(HttpStatus status, String message, Map<String, Object> details) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", Instant.now().toString());
